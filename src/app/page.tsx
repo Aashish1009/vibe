@@ -1,12 +1,12 @@
 
-
 import React from 'react'
 
 const page =  () => {
- 
+  
+ console.log("server")
   return (
     <div >
-      hi
+     
     </div>
   )
 }
