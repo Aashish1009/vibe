@@ -1,11 +1,12 @@
 
 import {Sandbox} from "@e2b/code-interpreter"
 
-import { Agent, openai, createAgent, createTool, createNetwork ,type Tool} from "@inngest/agent-kit";
+import { openai, createAgent, createTool, createNetwork ,type Tool} from "@inngest/agent-kit";
 import { inngest } from "./client";
 import { getSandbox, lastAssistantMessage } from "./util";
 import z from "zod";
 import { PROMPT } from "@/prompt";
+import { prisma } from "@/lib/db";
 
 interface AgentState{
   summary:string;
@@ -27,7 +28,7 @@ export const codeAgentfunction = inngest.createFunction(
       description: "an expert code agent",
       system: PROMPT,
       model: openai({ model: "gpt-5-nano" , defaultParameters:{
-        temperature:0.1,
+        temperature:1,
       }}),
       tools:[
         createTool({
@@ -66,7 +67,7 @@ export const codeAgentfunction = inngest.createFunction(
               content: z.string(),
             }))
         }),
-          handler:async({files},{step,network}:Tool.options<AgentState>)=>{
+          handler:async({files},{step,network}:Tool.Options<AgentState>)=>{
            const newfiles = await step?.run("createOrUpdatefile",async()=>{
             try {
               const updatedfiles = network.state.data.files || {};
