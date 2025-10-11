@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Form ,FormField } from '@/components/ui/form';
 import { useRouter } from 'next/navigation';
 import { PROJECT_TEMPLATES } from '../../constants';
+import { useClerk } from '@clerk/nextjs';
 
 
 
@@ -31,7 +32,7 @@ const ProjectForm = () => {
     },
   })
 
-
+  const clerk = useClerk();
   const trpc = useTRPC();
   const queryclient = useQueryClient();
   const router  = useRouter();
@@ -44,6 +45,10 @@ const ProjectForm = () => {
       },
       onError : (error) =>{
         toast.error(error.message)
+        if(error.data?.code==="UNAUTHORIZED"){
+          clerk.openSignIn();
+        }
+        
       }
     }
   ))
