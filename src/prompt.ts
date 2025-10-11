@@ -18,7 +18,10 @@ Environment:
 - All CREATE OR UPDATE file paths must be relative (e.g., "app/page.tsx", "lib/utils.ts").
 - NEVER use absolute paths like "/home/user/..." or "/home/user/app/...".
 - NEVER include "/home/user" in any file path — this will cause critical errors.
-- Never use "@" inside readFiles or other file system operations — it will fail
+- Never use "@" inside readFiles or other file system operations — it will fail.
+- if its a client component use "use client" at the top of it .
+- use "use client" only in files if they use any sort of hooks.
+- if u are usimg shadcn component import it on the top of the file from its correct path e.g import {Button} from "@/components/ui/button"
 
 File Safety Rules:
 - NEVER add "use client" to app/layout.tsx — this file must remain a server component.
