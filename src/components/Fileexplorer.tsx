@@ -1,5 +1,5 @@
 import { CopyCheckIcon,CopyIcon } from "lucide-react";
-import { useState, useEffect,Fragment, useMemo, useCallback } from "react";
+import { useState, Fragment, useMemo, useCallback } from "react";
 import { Hint } from "./Hint";
 import { Button } from "./ui/button";
 import { CodeView } from "./Code-view"; 
@@ -9,7 +9,7 @@ import { Breadcrumb, BreadcrumbEllipsis, BreadcrumbItem,  BreadcrumbList, Breadc
 import { convertFilesToTreeItems } from "@/lib/utils";
 import { TreeView } from "./TreeView";
 
-type filecollection = {[path: string]: string};
+type filecollection = {[path: string]: string}; 
 
 function getlanguageFromextension(filename: string): string {
     const extension = filename.split(".").pop()?.toLowerCase() ;

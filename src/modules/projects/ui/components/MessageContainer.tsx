@@ -4,7 +4,6 @@ import MessageCard from "./MessageCard";
 import MessageForm from "./MessageForm";
 import { useEffect, useRef } from "react";
 import { fragment } from "@/generated/prisma";
-import { se } from "date-fns/locale";
 import {MessageLoading} from "./MessageLoading";
 
 interface Props{
@@ -15,17 +14,20 @@ interface Props{
 
 const MessageContainer = ({ProjectId,activefragment,setActivefragment}:Props) => {
   const bottomref = useRef<HTMLDivElement>(null);
+  const lastAssistantMessageRef = useRef<string | null>(null);
     const trpc = useTRPC();
     const {data:messages} = useSuspenseQuery(trpc.messages.getMany.queryOptions({projectId:ProjectId},{
       refetchInterval:5000
     }));
 
-    // useEffect(()=>{
-    //   const lastAssistantMessagewithfragment = messages.findLast((msg) => msg.role === "ASSISTANT" && !!msg.fragment);
-    //   if(lastAssistantMessagewithfragment){
-    //        setActivefragment(lastAssistantMessagewithfragment.fragment);
-    //   }
-    // },[messages, setActivefragment])
+  useEffect(()=>{
+    const lastAssistantMessage = messages.findLast((m)=> m.role === "ASSISTANT");
+    if(lastAssistantMessage?.fragment && lastAssistantMessage.id!== lastAssistantMessageRef.current){
+      setActivefragment(lastAssistantMessage.fragment)
+      lastAssistantMessageRef.current = lastAssistantMessage.id
+    }
+    
+  },[messages,setActivefragment])
 
   useEffect(()=>{
     bottomref.current?.scrollIntoView()
