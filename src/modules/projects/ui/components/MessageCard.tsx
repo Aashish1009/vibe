@@ -25,6 +25,8 @@ interface FragmentCardProps {
 }
 
 const FragmentCard = ({ fragment, isfragmentactive, onfragmentclick }: FragmentCardProps) => {
+
+
     return (
         <button className={cn("flex items-start gap-2 border rounded-lg bg-muted w-fit p-3 hoverbg-secondary transition-colors", isfragmentactive && "border-primary text-primary bg-primary")}
         onClick={() => onfragmentclick(fragment)}
@@ -42,7 +44,7 @@ const FragmentCard = ({ fragment, isfragmentactive, onfragmentclick }: FragmentC
             </span>
            </div>
            <div className="flex items-center justify-center mt-0.5">
-            <ChevronRightIcon className={cn("size-4", isfragmentactive && "text-white")}/>
+            <ChevronRightIcon className={cn("size-4", isfragmentactive  && "text-white")}/>
            </div>
         </button>
     )
