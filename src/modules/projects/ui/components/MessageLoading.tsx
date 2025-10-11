@@ -19,7 +19,7 @@ const SimmerMessages = ()=>{
     useEffect(()=>{
         const interval = setInterval(()=>{
             setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % messages.length);
-        }, 2000);
+        }, 5000);
 
         return () => clearInterval(interval);
     },[messages.length]);

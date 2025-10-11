@@ -10,12 +10,12 @@ import { DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuPortal,Dr
 
 
 interface Props{
-    ProjectId:string;
+    projectId:string;
 }
 
-const ProjectHeader = ({ProjectId}:Props) => {
+const ProjectHeader = ({projectId}:Props) => {
     const trpc = useTRPC();
-    const {data:project} = useSuspenseQuery(trpc.projects.getOne.queryOptions({id:ProjectId}));
+    const {data:project} = useSuspenseQuery(trpc.projects.getOne.queryOptions({id:projectId}));
 
    const {theme,setTheme} = useTheme();
 

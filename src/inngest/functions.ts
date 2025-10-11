@@ -27,7 +27,7 @@ export const codeAgentfunction = inngest.createFunction(
       name: "codeagent",
       description: "an expert code agent",
       system: PROMPT,
-      model: openai({ model: "gpt-5-nano" , defaultParameters:{
+      model: openai({ model: "gpt-4o-mini" , defaultParameters:{
         temperature:1,
       }}),
       tools:[
