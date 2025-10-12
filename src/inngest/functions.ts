@@ -1,11 +1,11 @@
 
 import {Sandbox} from "@e2b/code-interpreter"
 
-import { openai, createAgent, createTool, createNetwork ,type Tool} from "@inngest/agent-kit";
+import { openai, createAgent, createTool, createNetwork ,type Tool,type Message, createState} from "@inngest/agent-kit";
 import { inngest } from "./client";
 import { getSandbox, lastAssistantMessage } from "./util";
 import z from "zod";
-import { PROMPT } from "@/prompt";
+import { PROMPT ,FRAGMENT_TITLE_PROMPT,RESPONSE_PROMPT} from "@/prompt";
 import { prisma } from "@/lib/db";
 
 interface AgentState{
@@ -22,12 +22,39 @@ export const codeAgentfunction = inngest.createFunction(
       const sandbox = await Sandbox.create("vibe-nextjs-aashish1234");
       return sandbox.sandboxId
     }) 
+
+    const previousMessages = await step.run("get-previous-messages",async ()=>{
+      const formattedMessages:Message[]=[];
+
+      const messages = await prisma.message.findMany({
+        where:{projectId:event.data.projectId},
+        orderBy:{createdAt:"desc"},
+      })
+
+      for(const message of messages){
+        formattedMessages.push({
+          type:"text",
+          role:message.role==="ASSISTANT"?"assistant":"user",
+          content:message.content
+        })
+      }
+      return formattedMessages
+
+    })
+
+    const state = createState<AgentState>({
+      summary:"",
+      files:{}
+    },{
+      messages:previousMessages
+    })
     
       const codeAgent = createAgent<AgentState>({
       name: "codeagent",
       description: "an expert code agent",
       system: PROMPT,
-      model: openai({ model: "gpt-4o-mini" , defaultParameters:{
+      // gpt-4.1
+      model: openai({ model: "gpt-4.1-mini" , defaultParameters:{
         temperature:1,
       }}),
       tools:[
@@ -130,6 +157,7 @@ export const codeAgentfunction = inngest.createFunction(
       description:"a network to manage coding tasks",
       agents:[codeAgent],
       maxIter:10,
+      defaultState:state,
       router:async({network})=>{
         const summary = network.state.data.summary;
         if(summary){
@@ -140,7 +168,49 @@ export const codeAgentfunction = inngest.createFunction(
       }
     })
 
-  const result = await network.run(event.data.value);
+  const result = await network.run(event.data.value,{state:state});
+
+  const fragmentTitleGenerator = createAgent({
+    name:"fragment-title-generator",
+    description:"a fragment title generator",
+    model:openai({ model: "gpt-4o-mini" }),
+    system:FRAGMENT_TITLE_PROMPT,
+  })
+
+  const ResponseGenrator = createAgent({
+    name:"response-generator",
+    description:"a response generator",
+    model:openai({ model: "gpt-4o-mini" }),
+    system:RESPONSE_PROMPT,
+  })
+
+  const {output:fragmentTitleoutput} = await fragmentTitleGenerator.run(result.state.data.summary);
+  const {output:responseoutput} = await ResponseGenrator.run(result.state.data.summary);
+
+  const generateFragmentTitle = () => {
+    if(fragmentTitleoutput[0].type!=="text"){
+      return "Fragment";
+    }
+    if(Array.isArray(fragmentTitleoutput[0].content)){
+      return fragmentTitleoutput[0].content.map((txt)=>txt).join("");
+    }else{
+      return fragmentTitleoutput[0].content
+    }
+
+  }
+
+  const generateResponse = () => {
+    if(responseoutput[0].type!=="text"){
+      return "here you go";
+    }
+    if(Array.isArray(responseoutput[0].content)){
+      return responseoutput[0].content.map((txt)=>txt).join("");
+    }else{
+      return responseoutput[0].content
+    }
+
+  }
+
   const isError = !result.state.data.summary||Object.keys(result.state.data.files||{}).length === 0;
 
 const sandboxUrl = await step.run("get-sandbox-url",async ()=>{
@@ -164,13 +234,13 @@ await step.run("save-result",async()=>{
     return await prisma.message.create({
       data:{
         projectId:event.data.projectId,
-        content:result.state.data.summary ,
+        content:generateResponse() ,
         role:"ASSISTANT",
         type:"RESULT",
         fragment:{
           create:{
             sandBoxUrl:sandboxUrl,
-            title:"fragment",
+            title:generateFragmentTitle(),
             files:result.state.data.files 
           }
         }
