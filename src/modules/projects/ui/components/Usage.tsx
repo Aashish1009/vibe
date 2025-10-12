@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { formatDuration, intervalToDuration } from "date-fns";
 import { CrownIcon } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
+import { useMemo } from "react";
 
 interface Props{
     points:number,
@@ -13,6 +14,21 @@ export const Usage = ({points,msBeforenext}:Props) =>{
 
   const {has } = useAuth();
   const hasProaccess = has?.({plan:"pro"});
+
+  const resetTime = useMemo(()=>{
+  try {
+    return formatDuration( 
+                intervalToDuration({
+                start:new Date(),
+                end:new Date(Date.now()+msBeforenext)
+                }),
+               {format:["months","days","hours"]}
+            )
+  } catch (error) {
+    console.error("error fomating duration ",error);
+    return "few days";
+  }
+  },[msBeforenext])
   return (
 
     <div className="rounded-t-xl bg-background border border-b-0 p-2.5">
@@ -22,13 +38,7 @@ export const Usage = ({points,msBeforenext}:Props) =>{
               {points} {hasProaccess? "":"free"} credit remaining
             </p>
             <p className="text-xs text-muted-foreground">
-             Reset in {" "}  {formatDuration( 
-                intervalToDuration({
-                start:new Date(),
-                end:new Date(Date.now()+msBeforenext)
-                }),
-               {format:["months","days","hours"]}
-            )}
+             Reset in {" "}  {resetTime}
             </p>
           </div>
          {!hasProaccess && (

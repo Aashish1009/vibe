@@ -20,6 +20,7 @@ export const codeAgentfunction = inngest.createFunction(
      
     const sandboxId = await step.run("get-sandbox-id",async ()=>{
       const sandbox = await Sandbox.create("vibe-nextjs-aashish1234");
+      await sandbox.setTimeout(60_000*10*3);
       return sandbox.sandboxId
     }) 
 
@@ -29,6 +30,7 @@ export const codeAgentfunction = inngest.createFunction(
       const messages = await prisma.message.findMany({
         where:{projectId:event.data.projectId},
         orderBy:{createdAt:"desc"},
+        take:5,
       })
 
       for(const message of messages){
@@ -38,7 +40,7 @@ export const codeAgentfunction = inngest.createFunction(
           content:message.content
         })
       }
-      return formattedMessages
+      return formattedMessages.reverse();
 
     })
 
