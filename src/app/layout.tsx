@@ -26,8 +26,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <ClerkProvider>
+  return ( 
+    <ClerkProvider 
+     appearance={{
+      variables:{
+        colorPrimary:"#C96342"
+      }
+     }}
+    >
     <TRPCReactProvider>
       
     <html lang="en" suppressHydrationWarning>

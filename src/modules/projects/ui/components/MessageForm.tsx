@@ -9,9 +9,12 @@ import { useState } from 'react';
 import {toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useTRPC } from '@/trpc/client';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Form ,FormField } from '@/components/ui/form';
+import { Usage } from './Usage';
+import { useRouter } from "next/navigation"; // ✅ App Router compatible
+
 
 
 interface Props{
@@ -27,6 +30,12 @@ const formSchema = z.object({
 
 const MessageForm = ({ProjectId}:Props) => {
 
+    const trpc = useTRPC();
+    const router = useRouter();
+  const queryclient = useQueryClient();
+
+  const {data:usage} = useQuery(trpc.usage.status.queryOptions());
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -35,17 +44,20 @@ const MessageForm = ({ProjectId}:Props) => {
   })
 
 
-  const trpc = useTRPC();
-  const queryclient = useQueryClient();
+
   const createMessage = useMutation(trpc.messages.create.mutationOptions(
     {
       onSuccess : () =>{
         form.reset();
         queryclient.invalidateQueries(trpc.messages.getMany.queryOptions({projectId:ProjectId}))
+        queryclient.invalidateQueries(trpc.usage.status.queryOptions());
 
       },
       onError : (error) =>{
         toast.error(error.message)
+        if(error.data?.code==="TOO_MANY_REQUESTS"){
+          router.push("/pricing");
+        }
       }
     }
   ))
@@ -54,7 +66,7 @@ const MessageForm = ({ProjectId}:Props) => {
   const isbuttondisable = ispending || !form.formState.isValid;
 
   const [isFocused,setIsFocused] = useState(false);
-  const showUsage = false;
+  const showUsage = !!usage;
 
   
 
@@ -67,6 +79,7 @@ const MessageForm = ({ProjectId}:Props) => {
   }
   return (
     <Form {...form}>
+      {showUsage && (<Usage points={usage.remainingPoints} msBeforenext={usage.msBeforeNext} />)}
       <form onSubmit={form.handleSubmit(onsubmit)}
       className={cn("relative border p-4 pt-1 rounded-xl bg-sidebar dark:bg-sidebar transition-all",isFocused && "shadow-xs",showUsage && "rounded-t-none")}
       >
