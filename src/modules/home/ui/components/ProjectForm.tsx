@@ -12,7 +12,8 @@ import { useTRPC } from '@/trpc/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Form ,FormField } from '@/components/ui/form';
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation"; // ✅
+
 import { PROJECT_TEMPLATES } from '../../constants';
 import { useClerk } from '@clerk/nextjs';
 
@@ -40,6 +41,7 @@ const ProjectForm = () => {
     {
       onSuccess : (data) =>{
         queryclient.invalidateQueries(trpc.projects.getMany.queryOptions())
+        queryclient.invalidateQueries(trpc.usage.status.queryOptions());
         router.push(`/projects/${data.id}`)
 
       },
@@ -47,6 +49,10 @@ const ProjectForm = () => {
         toast.error(error.message)
         if(error.data?.code==="UNAUTHORIZED"){
           clerk.openSignIn();
+        }
+
+        if(error.data?.code==="TOO_MANY_REQUESTS"){
+          router.push("/pricing");
         }
         
       }
